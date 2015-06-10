@@ -66,14 +66,15 @@
 
 - name: Update mysql root password for all root accounts
   mysql_user:
-    name: 'root'
+    name: root
     host: '{{ item }}'
-    password: '{{ mysql_root_password }}'
+    password: "{{ mysql_root_password }}"
     login_user: root
     login_password: "{{ mysql_root_password }}"
     check_implicit_admin: yes
     priv: "*.*:ALL,GRANT"
   with_items: [ '{{ ansible_hostname }}', '127.0.0.1', '::1', 'localhost' ]
+  when: mysql_installed is defined and not mysql_installed.stat.exists
 
 - name: Create /root/.my.cnf file with root password credentials
   template:
@@ -94,7 +95,6 @@
   mysql_db:
     db: 'test'
     state: 'absent'
-
 
 # ---- Configure MySQL database backup ----
 
