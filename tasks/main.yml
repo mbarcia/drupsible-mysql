@@ -11,11 +11,13 @@
     path: '/usr/bin/mysqld_safe'
   register: mysql_installed
 
-- name: MySQL | Set debconf vars
-  command: raw echo mysql-server mysql-server/root_password password {{ mysql_root_password }} | /usr/bin/debconf-set-selections
+- name: Set MySQL root password before installing
+  debconf: name='mysql-server' question='mysql-server/root_password' value='{{ mysql_root_password }}' vtype='password'
+  when: mysql_installed is defined and not mysql_installed.stat.exists
 
-- name: MySQL | Set debconf vars
-  command: raw echo mysql-server mysql-server/root_password_again password {{ mysql_root_password }} | /usr/bin/debconf-set-selections
+- name: Re-enter MySQL root password before installing
+  debconf: name='mysql-server' question='mysql-server/root_password_again' value='{{ mysql_root_password }}' vtype='password'
+  when: mysql_installed is defined and not mysql_installed.stat.exists
 
 - name: Install MySQL-related packages
   apt:
