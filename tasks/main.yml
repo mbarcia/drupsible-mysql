@@ -142,3 +142,9 @@
   with_items: mysql_users
   when: (item.name is defined and item.name)
 
+- name: Restart MySQL service (again) after first configuration
+  service:
+    name: 'mysql'
+    state: 'restarted'
+  when: (mysql_installed is defined and not mysql_installed.stat.exists)
+
