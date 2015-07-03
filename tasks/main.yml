@@ -43,7 +43,7 @@
     owner: 'root'
     group: 'root'
     mode: '0644'
-  notify: [ 'Reload mysql' ]
+  notify: [ 'Restart mysql' ]
 
 - name: Apply /etc/mysql/conf.d/client.cnf configuration
   template:
@@ -52,7 +52,7 @@
     owner: 'root'
     group: 'root'
     mode: '0644'
-  notify: [ 'Reload mysql' ]
+  notify: [ 'Restart mysql' ]
 
 - name: Restart MySQL service on first install
   service:
