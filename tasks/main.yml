@@ -88,6 +88,8 @@
   mysql_user:
     user: ""
     host: '{{ item }}'
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
     state: 'absent'
   with_items: [ '{{ ansible_hostname }}', 'localhost' ]
 
@@ -95,6 +97,8 @@
   mysql_db:
     db: 'test'
     state: 'absent'
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
 
 # ---- Configure MySQL database backup ----
 
@@ -128,6 +132,8 @@
   mysql_db:
     name: '{{ item.name }}'
     state: '{{ item.state | default("present") }}'
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
   with_items: mysql_databases
   when: item.name is defined and item.name
 
@@ -139,6 +145,8 @@
     priv: '{{ item.priv | default(item.name + ".*:ALL") }}'
     append_privs: '{{ item.append_privs | default("no") }}'
     host: '{{ item.host | default("localhost") }}'
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
   with_items: mysql_users
   when: (item.name is defined and item.name)
 
