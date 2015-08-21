@@ -83,6 +83,7 @@
     owner: 'root'
     group: 'root'
     mode: '0600'
+  when: mysql_installed is defined and not mysql_installed.stat.exists
 
 - name: Delete anonymous mysql user
   mysql_user:
@@ -155,4 +156,3 @@
     name: 'mysql'
     state: 'restarted'
   when: (mysql_installed is defined and not mysql_installed.stat.exists)
-
