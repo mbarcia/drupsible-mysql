@@ -33,7 +33,7 @@
     groups: '{{ mysql_mysqld_append_groups | join(",") | default(omit) }}'
     append: True
     createhome: False
-  when: mysql_pki is defined and mysql_pki
+  when: mysql_pki is defined and mysql_pki|bool
   notify: [ 'Restart mysql' ]
 
 - name: Apply /etc/mysql/conf.d/mysqld.cnf configuration
