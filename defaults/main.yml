@@ -89,7 +89,7 @@ mysql_databases: []
 mysql_password_length: '20'
 
 # Password for MySQL root user
-mysql_root_password: "{{ lookup('password', secret + '/credentials/' + ansible_fqdn + '/mysql/root/password chars=ascii_letters,digits,hexdigits length=' + mysql_password_length) }}"
+mysql_root_password: "{{ lookup('password', secret + '/credentials/' + inventory_hostname + '/mysql/root/password chars=ascii_letters,digits,hexdigits length=' + mysql_password_length) }}"
 
 # List of MySQL users to manage (defaults first)
 mysql_users: []
