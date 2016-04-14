@@ -14,10 +14,12 @@
 - name: Set MySQL root password before installing
   debconf: name='mysql-server' question='mysql-server/root_password' value='{{ mysql_root_password }}' vtype='password'
   when: mysql_installed is defined and not mysql_installed.stat.exists
+  no_log: True
 
 - name: Re-enter MySQL root password before installing
   debconf: name='mysql-server' question='mysql-server/root_password_again' value='{{ mysql_root_password }}' vtype='password'
   when: mysql_installed is defined and not mysql_installed.stat.exists
+  no_log: True
 
 - name: Install MySQL-related packages
   apt:
@@ -75,6 +77,7 @@
     priv: "*.*:ALL,GRANT"
   with_items: [ '{{ ansible_hostname }}', '127.0.0.1', '::1', 'localhost' ]
   when: mysql_installed is defined and not mysql_installed.stat.exists
+  no_log: True
 
 - name: Create /root/.my.cnf file with root password credentials
   template:
@@ -84,6 +87,7 @@
     group: 'root'
     mode: '0600'
   when: mysql_installed is defined and not mysql_installed.stat.exists
+  no_log: True
 
 - name: Delete anonymous mysql user
   mysql_user:
@@ -93,6 +97,7 @@
     login_password: "{{ mysql_root_password }}"
     state: 'absent'
   with_items: [ '{{ ansible_hostname }}', 'localhost' ]
+  no_log: True
 
 - name: Remove test database
   mysql_db:
@@ -100,6 +105,7 @@
     state: 'absent'
     login_user: root
     login_password: "{{ mysql_root_password }}"
+  no_log: True
 
 # ---- Configure MySQL database backup ----
 
@@ -137,6 +143,7 @@
     login_password: "{{ mysql_root_password }}"
   with_items: mysql_databases
   when: item.name is defined and item.name
+  no_log: True
 
 - name: Manage MySQL users
   mysql_user:
@@ -150,6 +157,7 @@
     login_password: "{{ mysql_root_password }}"
   with_items: mysql_users
   when: (item.name is defined and item.name)
+  no_log: True
 
 - name: Restart MySQL service (again) after first configuration
   service:
