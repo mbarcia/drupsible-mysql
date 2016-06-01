@@ -141,7 +141,7 @@
     state: '{{ item.state | default("present") }}'
     login_user: root
     login_password: "{{ mysql_root_password }}"
-  with_items: mysql_databases
+  with_items: "{{ mysql_databases }}"
   when: item.name is defined and item.name
   no_log: True
 
@@ -155,7 +155,7 @@
     host: '{{ item.host | default("localhost") }}'
     login_user: root
     login_password: "{{ mysql_root_password }}"
-  with_items: mysql_users
+  with_items: "{{ mysql_users }}"
   when: (item.name is defined and item.name)
   no_log: True
 
