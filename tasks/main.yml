@@ -97,7 +97,8 @@
     login_password: "{{ mysql_root_password }}"
     state: 'absent'
   with_items: [ '{{ ansible_hostname }}', 'localhost' ]
-  no_log: True
+  ignore_errors: True
+#  no_log: True
 
 - name: Remove test database
   mysql_db:
