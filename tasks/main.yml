@@ -56,13 +56,8 @@
     mode: '0644'
   notify: [ 'Restart mysql' ]
 
-- name: Restart MySQL service on first install
-  service:
-    name: 'mysql'
-    state: 'restarted'
-  when: ((mysql_installed is defined and not mysql_installed.stat.exists) and
-         (mysql_install_status is defined and mysql_install_status.changed))
-
+# This effectively restarts MySQL server after first-time installation
+- meta: flush_handlers
 
 # ---- Secure MySQL installation ----
 
@@ -98,7 +93,7 @@
     state: 'absent'
   with_items: [ '{{ ansible_hostname }}', 'localhost' ]
   ignore_errors: True
-#  no_log: True
+  no_log: True
 
 - name: Remove test database
   mysql_db:
@@ -117,6 +112,7 @@
     owner: 'root'
     group: 'root'
     mode: '0644'
+  notify: [ 'Reload mysql' ]
 
 - name: Create mysqldump section in /etc/mysql/debian.cnf
   lineinfile:
@@ -124,6 +120,7 @@
     dest:   '/etc/mysql/debian.cnf'
     line:   '[mysqldump]'
     state:  'present'
+  notify: [ 'Reload mysql' ]
 
 - name: Enable events table backup in mysqldump
   lineinfile:
@@ -132,7 +129,7 @@
     dest:   '/etc/mysql/debian.cnf'
     line:   'events = true'
     state:  'present'
-
+  notify: [ 'Reload mysql' ]
 
 # ---- Manage MySQL databases and users ----
 
@@ -160,8 +157,4 @@
   when: (item.name is defined and item.name)
   no_log: True
 
-- name: Restart MySQL service (again) after first configuration
-  service:
-    name: 'mysql'
-    state: 'restarted'
-  when: (mysql_installed is defined and not mysql_installed.stat.exists)
+- meta: flush_handlers
