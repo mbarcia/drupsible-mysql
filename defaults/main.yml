@@ -22,7 +22,7 @@ mysql_mysqld_max_connections: 100
 
 # Use this hash variable to set additional mysqld options
 mysql_mysqld_options: {}
-#  'key_buffer': '16M'
+#  'key_buffer_size': '16M'
 #  'skip-name-resolve':
 
 # List of additional system groups to append to the MySQL system user

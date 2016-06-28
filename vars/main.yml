@@ -1,0 +1,9 @@
+---
+# This is a list of IP addresses from the deploy servers allowed to connect to
+# MySQL server from remote hosts. It will be applied in firewall (ferm) and
+# /etc/hosts.allow (tcpwrappers).
+mysql_mysqld_allow_deploy: |
+  {% set comma = joiner(",") %}
+  {% for host in groups[ app_name + '-' + app_target + '_deploy' ] %}
+    {{ comma() }}{{ hostvars[host]['default_ipv4_addresses'][0] }}
+  {% endfor %}

@@ -1,5 +1,4 @@
 ---
-
 dependencies:
 
   - role: debops.secret
@@ -9,7 +8,7 @@ dependencies:
 
       - type: 'dport_accept'
         dport: [ 'mysql' ]
-        saddr: '{{ mysql_mysqld_allow }}'
+        saddr: '{{ mysql_mysqld_allow_deploy + mysql_mysqld_allow }}'
         weight: '50'
         filename: 'mysql_dependency_accept'
 
@@ -17,7 +16,7 @@ dependencies:
     tcpwrappers_allow:
 
       - daemon: 'mysqld'
-        client: '{{ mysql_mysqld_allow }}'
+        client: '{{ mysql_mysqld_allow_deploy + mysql_mysqld_allow }}'
         weight: '50'
         filename: 'mysql_dependency_allow'
         comment: 'Allow remote connections to MySQL server'
@@ -36,6 +35,7 @@ galaxy_info:
     - raring
     - saucy
     - trusty
+    - xenial
   - name: Debian
     versions:
     - wheezy
@@ -43,4 +43,3 @@ galaxy_info:
   categories:
   - 'database:sql'
   - 'system'
-
