@@ -5,7 +5,9 @@
 mysql_mysqld_allow_group_ip_addr: |
   {% set comma = joiner(",") %}
   {% for group in mysql_mysqld_allow_groups %}
-  {% for host in groups[group] -%}
-  {{ comma() }}{{ hostvars[host].ansible_default_ipv4.address }}
+  {% for host in groups[group] %}
+  {% for ip_addr in hostvars[host].ansible_all_ipv4_addresses -%}
+  {{ comma() }}{{ ip_addr }}
   {%- endfor %}
+  {% endfor %}
   {% endfor %}
