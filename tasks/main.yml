@@ -1,6 +1,17 @@
 ---
-
 # ---- Install and configure MySQL server ----
+
+- name: Gather facts of mysql_mysqld_allow_group servers
+  setup:
+  delegate_to: "{{ item }}"
+  delegate_facts: True
+  with_items: "{{ groups[mysql_mysqld_allow_group] }}"
+
+- set_fact:
+    mysql_ferm_dependent_rules_exported: "{{ mysql_ferm_dependent_rules }}"
+
+- set_fact:
+    mysql_tcpwrappers_dependent_allow_exported: "{{ mysql_tcpwrappers_dependent_allow }}"
 
   # We want to have our configuration enabled as soon as possible for UTF-8
   # support, this check lets us know if MySQL server has just been installed

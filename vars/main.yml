@@ -1,13 +1,13 @@
 ---
-# This is a list of IP addresses from the deploy servers allowed to connect to
-# MySQL server from remote hosts. It will be applied in firewall (ferm) and
-# /etc/hosts.allow (tcpwrappers).
+# This is a list of IP addresses from the group of servers allowed to connect to
+# MySQL server (indicated by mysql_mysqld_allow_group). It will be applied in
+# firewall (ferm) and /etc/hosts.allow (tcpwrappers).
 mysql_mysqld_allow_group_ip_addr: |
   {% set comma = joiner(",") %}
-  {% for group in mysql_mysqld_allow_groups %}
-  {% for host in groups[group] %}
+  {% for host in groups[mysql_mysqld_allow_group] %}
   {% for ip_addr in hostvars[host].ansible_all_ipv4_addresses -%}
   {{ comma() }}{{ ip_addr }}
   {%- endfor %}
   {% endfor %}
-  {% endfor %}
+
+mysql_mysqld_allow_group_ip_addr_list: "{{ mysql_mysqld_allow_group_ip_addr.replace('\n', '').split(',') }}"
