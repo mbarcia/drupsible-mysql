@@ -1,4 +1,16 @@
 ---
+mysql_ferm_dependent_rules:
+- dport: [ 'mysql' ]
+  saddr: "{{ mysql_mysqld_allow_group_ip_addr_list + mysql_mysqld_allow }}"
+  weight: '50'
+  filename: 'mysql_dependency_accept'
+
+mysql_tcpwrappers_dependent_allow:
+- daemon: 'mysqld'
+  client: "{{ mysql_mysqld_allow_group_ip_addr_list + mysql_mysqld_allow }}"
+  weight: '50'
+  filename: 'mysql_dependent_allow'
+  comment: 'Allow remote connections to MySQL server'
 
 # ---- MySQL server configuration ----
 
@@ -17,12 +29,12 @@ mysql_mysqld_port: 3306
 # server for it to listen on all network interfaces.
 mysql_mysqld_allow: []
 
-# This is a list of inventory groups, whose hosts are allowed to connect to
+# This is an inventory group name, whose hosts are allowed to connect to
 # MySQL. It will be applied to the firewall through ferm and to
 # /etc/hosts.allow through tcpwrappers.
 # You will need to set mysql_mysqld_bind_address to 0.0.0.0 and restart MySQL
 # server for it to listen on all network interfaces.
-mysql_mysqld_allow_groups: []
+mysql_mysqld_allow_group: ""
 
 # Maximum number of allowed connections
 mysql_mysqld_max_connections: 100
