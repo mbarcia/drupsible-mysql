@@ -1,6 +1,7 @@
 ---
 mysql_ferm_dependent_rules:
-- dport: [ 'mysql' ]
+- type: 'accept'
+  dport: [ 'mysql' ]
   saddr: "{{ mysql_mysqld_allow_group_ip_addr_list + mysql_mysqld_allow }}"
   weight: '50'
   filename: 'mysql_dependency_accept'
