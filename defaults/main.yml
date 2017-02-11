@@ -1,4 +1,8 @@
 ---
+# Switch to yes if in a cloud environment where the IPs of the web servers
+# are dynamic (not static/fixed at provision/config time)
+mysql_in_cloud: no
+
 mysql_ferm_dependent_rules:
 - type: 'accept'
   dport: [ 'mysql' ]
