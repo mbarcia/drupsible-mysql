@@ -42,6 +42,7 @@
     install_recommends: False
   register: mysql_install_status
   with_items: [ 'python-mysqldb', 'mysql-server', 'automysqlbackup', 'ssl-cert' ]
+  tags: [ provision ]
 
 - name: Add MySQL system user to specified groups
   user:
