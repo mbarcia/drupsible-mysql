@@ -24,16 +24,19 @@
   stat:
     path: '/usr/bin/mysqld_safe'
   register: mysql_installed
+  tags: [ provision ]
 
 - name: Set MySQL root password before installing
   debconf: name='mysql-server' question='mysql-server/root_password' value='{{ mysql_root_password }}' vtype='password'
   when: mysql_installed is defined and not mysql_installed.stat.exists
   no_log: True
+  tags: [ provision ]
 
 - name: Re-enter MySQL root password before installing
   debconf: name='mysql-server' question='mysql-server/root_password_again' value='{{ mysql_root_password }}' vtype='password'
   when: mysql_installed is defined and not mysql_installed.stat.exists
   no_log: True
+  tags: [ provision ]
 
 - name: Install MySQL-related packages
   apt:
@@ -43,6 +46,24 @@
   register: mysql_install_status
   with_items: [ 'python-mysqldb', 'mysql-server', 'automysqlbackup', 'ssl-cert' ]
   tags: [ provision ]
+
+- name: Set root user password
+  # If .my.cnf already exists, this will cause an mysql-root-password update.
+  mysql_user:
+    name: root
+    password: "{{ mysql_root_password }}"
+    check_implicit_admin: True
+  when: mysql_installed is defined and mysql_installed.stat.exists
+
+- name: Write /root/.my.cnf file with root password credentials
+  # Once .my.cnf is present, there's no need to pass login credentials to mysql_user.
+  template:
+    src: 'root/my.cnf.j2'
+    dest: '/root/.my.cnf'
+    owner: 'root'
+    group: 'root'
+    mode: '0600'
+  no_log: True
 
 - name: Add MySQL system user to specified groups
   user:
@@ -81,21 +102,9 @@
     name: root
     host: '{{ item }}'
     password: "{{ mysql_root_password }}"
-    login_user: root
-    login_password: "{{ mysql_root_password }}"
     check_implicit_admin: yes
     priv: "*.*:ALL,GRANT"
   with_items: [ '{{ ansible_hostname }}', '127.0.0.1', '::1', 'localhost' ]
-  when: mysql_installed is defined and not mysql_installed.stat.exists
-  no_log: True
-
-- name: Create /root/.my.cnf file with root password credentials
-  template:
-    src: 'root/my.cnf.j2'
-    dest: '/root/.my.cnf'
-    owner: 'root'
-    group: 'root'
-    mode: '0600'
   when: mysql_installed is defined and not mysql_installed.stat.exists
   no_log: True
 
@@ -103,8 +112,6 @@
   mysql_user:
     user: ""
     host: '{{ item }}'
-    login_user: root
-    login_password: "{{ mysql_root_password }}"
     state: 'absent'
   with_items: [ '{{ ansible_hostname }}', 'localhost' ]
   ignore_errors: True
@@ -114,8 +121,6 @@
   mysql_db:
     db: 'test'
     state: 'absent'
-    login_user: root
-    login_password: "{{ mysql_root_password }}"
   no_log: True
 
 # ---- Configure MySQL database backup ----
@@ -152,8 +157,6 @@
   mysql_db:
     name: '{{ item.name }}'
     state: '{{ item.state | default("present") }}'
-    login_user: root
-    login_password: "{{ mysql_root_password }}"
   with_items: "{{ mysql_databases }}"
   when: item.name is defined and item.name
   no_log: True
