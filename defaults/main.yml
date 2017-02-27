@@ -124,10 +124,3 @@ mysql_users: []
   #                                 # and saved in the 'secret' storage
   #  priv: 'user_name.*:ALL'
   #  append_privs: 'no,yes'
-
-# These options taken from https://www.drupal.org/project/apdqc
-mysql_mysqld_options:
-  # Default is 50 seconds
-  innodb_lock_wait_timeout: 20
-  # REPEATABLE-READ req for ACID, SERIALIZABLE req XA
-  transaction-isolation: READ-COMMITTED
