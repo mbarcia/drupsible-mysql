@@ -57,7 +57,10 @@ mysql_mysqld_append_groups: [ 'ssl-cert' ]
 # ---- Encrypted connections ----
 
 # Enable or disable support for TLS in MySQL (using debops.pki)
-mysql_pki: True
+mysql_pki: '{{ (True
+                  if (ansible_local|d() and ansible_local.pki|d() and
+                      ansible_local.pki.enabled|d() | bool)
+                  else False) | bool }}'
 
 # Base path for PKI directory
 mysql_pki_path: '{% if (ansible_local is defined and ansible_local.pki is defined) %}{{ ansible_local.pki.base_path }}{% else %}/etc/pki{% endif %}'
