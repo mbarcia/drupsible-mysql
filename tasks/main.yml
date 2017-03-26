@@ -38,6 +38,18 @@
   no_log: True
   tags: [ provision ]
 
+- name: List previous installations flags
+  shell: "ls /var/lib/mysql/debian-*.flag"
+  register: flags_to_cleanup
+  ignore_errors: yes
+
+- name: Delete any previous flag
+  file: 
+    name: "{{ item }}"
+    state: absent
+  with_items: "{{ flags_to_cleanup.stdout_lines }}"
+  when: flags_to_cleanup|success
+
 - name: Install MySQL-related packages
   apt:
     name: '{{ item }}'
@@ -46,6 +58,11 @@
   register: mysql_install_status
   with_items: [ 'python-mysqldb', 'mysql-server', 'automysqlbackup', 'ssl-cert' ]
   tags: [ provision ]
+
+# Make sure mysql is started (inside a container) if installed
+- name: Make sure mysql is started 
+  shell: service mysql restart
+  when: mysql_installed is defined and mysql_installed.stat.exists and mysql_in_container|d(False)|bool
 
 - name: Set root user password
   # If .my.cnf already exists, this will cause an mysql-root-password update.
@@ -92,8 +109,14 @@
     mode: '0644'
   notify: [ 'Restart mysql' ]
 
-# This effectively restarts MySQL server after first-time installation
+# Force restart after first-time installation (not running containerized)
 - meta: flush_handlers
+  when: mysql_installed is defined and not mysql_installed.stat.exists and not mysql_in_container|d(False)|bool
+
+# Force restart after first-time installation (inside a container)
+- name: Restart mysql service 
+  shell: service mysql restart
+  when: mysql_installed is defined and not mysql_installed.stat.exists and mysql_in_container|d(False)|bool
 
 # ---- Secure MySQL installation ----
 
@@ -104,7 +127,7 @@
     password: "{{ mysql_root_password }}"
     check_implicit_admin: yes
     priv: "*.*:ALL,GRANT"
-  with_items: [ '{{ ansible_hostname }}', '127.0.0.1', '::1', 'localhost' ]
+  with_items: [ "{{ ansible_hostname|default(inventory_hostname) }}", '127.0.0.1', '::1', localhost ]
   when: mysql_installed is defined and not mysql_installed.stat.exists
   no_log: True
 
@@ -113,7 +136,7 @@
     user: ""
     host: '{{ item }}'
     state: 'absent'
-  with_items: [ '{{ ansible_hostname }}', 'localhost' ]
+  with_items: [ "{{ ansible_hostname|default(inventory_hostname) }}", localhost ]
   ignore_errors: True
   no_log: True
 
@@ -176,3 +199,4 @@
   no_log: True
 
 - meta: flush_handlers
+  when: not mysql_in_container|d(False)|bool
