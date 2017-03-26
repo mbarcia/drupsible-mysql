@@ -41,7 +41,6 @@
 - name: List previous installations flags
   shell: "ls /var/lib/mysql/debian-*.flag"
   register: flags_to_cleanup
-  change_when: False
   ignore_errors: yes
 
 - name: Delete any previous flag
