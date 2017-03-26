@@ -106,12 +106,12 @@
 
 # Force restart after first-time installation (not running containerized)
 - meta: flush_handlers
-  when: mysql_installed is defined and not mysql_installed.stat.exists and not app_in_container|d(False)|bool
+  when: mysql_installed is defined and not mysql_installed.stat.exists and not mysql_in_container|d(False)|bool
 
 # Force restart after first-time installation (inside a container)
 - name: Restart mysql service 
   shell: service mysql restart
-  when: mysql_installed is defined and not mysql_installed.stat.exists and app_in_container|d(False)|bool
+  when: mysql_installed is defined and not mysql_installed.stat.exists and mysql_in_container|d(False)|bool
 
 # ---- Secure MySQL installation ----
 
@@ -194,4 +194,4 @@
   no_log: True
 
 - meta: flush_handlers
-  when: not app_in_container|d(False)|bool
+  when: not mysql_in_container|d(False)|bool
