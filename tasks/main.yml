@@ -48,7 +48,7 @@
     name: "{{ item }}"
     state: absent
   with_items: "{{ flags_to_cleanup.stdout_lines }}"
-  when: flags_to_cleanup|succeeded
+  when: flags_to_cleanup|success
 
 - name: Install MySQL-related packages
   apt:
