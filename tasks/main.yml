@@ -23,18 +23,24 @@
 - name: Check if MySQL server is installed
   stat:
     path: '/usr/bin/mysqld_safe'
-  register: mysql_installed
+  register: mysql_binary_installed_output
+  tags: [ provision ]
+
+- name: Test ibdata1 present
+  stat:
+    path: "/var/lib/mysql/ibdata1"
+  register: mysql_ibdata1_output
   tags: [ provision ]
 
 - name: Set MySQL root password before installing
   debconf: name='mysql-server' question='mysql-server/root_password' value='{{ mysql_root_password }}' vtype='password'
-  when: mysql_installed is defined and not mysql_installed.stat.exists
+  when: not mysql_binary_installed_output.stat.exists or not mysql_ibdata1_output.stat.exists
   no_log: True
   tags: [ provision ]
 
 - name: Re-enter MySQL root password before installing
   debconf: name='mysql-server' question='mysql-server/root_password_again' value='{{ mysql_root_password }}' vtype='password'
-  when: mysql_installed is defined and not mysql_installed.stat.exists
+  when: not mysql_binary_installed_output.stat.exists or not mysql_ibdata1_output.stat.exists
   no_log: True
   tags: [ provision ]
 
@@ -42,6 +48,7 @@
   shell: "ls /var/lib/mysql/debian-*.flag"
   register: flags_to_cleanup
   ignore_errors: yes
+  tags: [ provision ]
 
 - name: Delete any previous flag
   file: 
@@ -49,6 +56,7 @@
     state: absent
   with_items: "{{ flags_to_cleanup.stdout_lines }}"
   when: flags_to_cleanup|success
+  tags: [ provision ]
 
 - name: Install MySQL-related packages
   apt:
@@ -60,17 +68,33 @@
   tags: [ provision ]
 
 # Make sure mysql is started (inside a container) if installed
+- name: Run mysql_install_db if no ibdata1 exists
+  command: mysql_install_db
+  when: not mysql_ibdata1_output.stat.exists 
+
 - name: Make sure mysql is started 
-  shell: service mysql restart
-  when: mysql_installed is defined and mysql_installed.stat.exists and mysql_in_container|d(False)|bool
+  command: service mysql restart
+  when: mysql_in_container|d(False)|bool
 
 - name: Set root user password
-  # If .my.cnf already exists, this will cause an mysql-root-password update.
+  # If /root/.my.cnf already exists, this will update the root password.
   mysql_user:
     name: root
     password: "{{ mysql_root_password }}"
     check_implicit_admin: True
-  when: mysql_installed is defined and mysql_installed.stat.exists
+    config_file: /root/.my.cnf
+  register: mysql_set_root_password_output
+  ignore_errors: True
+
+- name: Try to set root user password with drupsible secret
+  # Trying with password in ansible/secret, if something got mixed up.
+  mysql_user:
+    name: root
+    password: "{{ mysql_root_password }}"
+    check_implicit_admin: True
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+  when: mysql_set_root_password_output|failed
 
 - name: Write /root/.my.cnf file with root password credentials
   # Once .my.cnf is present, there's no need to pass login credentials to mysql_user.
@@ -111,12 +135,12 @@
 
 # Force restart after first-time installation (not running containerized)
 - meta: flush_handlers
-  when: mysql_installed is defined and not mysql_installed.stat.exists and not mysql_in_container|d(False)|bool
+  when: mysql_installed__|d(False)
 
 # Force restart after first-time installation (inside a container)
 - name: Restart mysql service 
   shell: service mysql restart
-  when: mysql_installed is defined and not mysql_installed.stat.exists and mysql_in_container|d(False)|bool
+  when: not mysql_binary_installed_output.stat.exists
 
 # ---- Secure MySQL installation ----
 
@@ -128,7 +152,6 @@
     check_implicit_admin: yes
     priv: "*.*:ALL,GRANT"
   with_items: [ "{{ ansible_hostname|default(inventory_hostname) }}", '127.0.0.1', '::1', localhost ]
-  when: mysql_installed is defined and not mysql_installed.stat.exists
   no_log: True
 
 - name: Delete anonymous mysql user
@@ -200,3 +223,25 @@
 
 - meta: flush_handlers
   when: not mysql_in_container|d(False)|bool
+
+- name: Test if using a phusion image
+  stat:
+    path: "/sbin/my_init"
+  register: mysql_my_init_output
+  when: mysql_in_container|d(False)|bool
+  tags: [ provision ]
+
+- name: Make sure /etc/service/mysql exists
+  file:
+    path: /etc/service/mysql
+    state: directory
+  when: mysql_in_container|d(False)|bool and mysql_my_init_output.stat.exists
+  tags: [ provision ]
+
+- name: Install mysql at boot
+  copy:
+    src: mysql-init.sh
+    dest: /etc/service/mysql/run
+    mode: "a+x"
+  when: mysql_in_container|d(False)|bool and mysql_my_init_output.stat.exists
+  tags: [ provision ]
