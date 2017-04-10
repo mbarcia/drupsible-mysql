@@ -42,6 +42,7 @@
   shell: "ls /var/lib/mysql/debian-*.flag"
   register: flags_to_cleanup
   ignore_errors: yes
+  tags: [ provision ]
 
 - name: Delete any previous flag
   file: 
@@ -49,6 +50,7 @@
     state: absent
   with_items: "{{ flags_to_cleanup.stdout_lines }}"
   when: flags_to_cleanup|success
+  tags: [ provision ]
 
 - name: Install MySQL-related packages
   apt:
@@ -63,6 +65,7 @@
 - name: Make sure mysql is started 
   shell: service mysql restart
   when: mysql_installed is defined and mysql_installed.stat.exists and mysql_in_container|d(False)|bool
+  tags: [ provision ]
 
 - name: Set root user password
   # If .my.cnf already exists, this will cause an mysql-root-password update.
@@ -71,6 +74,7 @@
     password: "{{ mysql_root_password }}"
     check_implicit_admin: True
   when: mysql_installed is defined and mysql_installed.stat.exists
+  tags: [ provision ]
 
 - name: Write /root/.my.cnf file with root password credentials
   # Once .my.cnf is present, there's no need to pass login credentials to mysql_user.
@@ -81,6 +85,7 @@
     group: 'root'
     mode: '0600'
   no_log: True
+  tags: [ provision ]
 
 - name: Add MySQL system user to specified groups
   user:
@@ -90,6 +95,7 @@
     createhome: False
   when: mysql_pki is defined and mysql_pki|bool
   notify: [ 'Restart mysql' ]
+  tags: [ provision ]
 
 - name: Apply /etc/mysql/conf.d/mysqld.cnf configuration
   template:
