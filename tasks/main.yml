@@ -70,12 +70,11 @@
 # Make sure mysql is started (inside a container) if installed
 - name: Run mysql_install_db if no ibdata1 exists
   command: mysql_install_db
-  when: not mysql_ibdata1_output.stat.exists 
+  when: not mysql_ibdata1_output.stat.exists
+  notify: [ 'Restart mysql' ]
 
-- name: Make sure mysql is started 
-  command: service mysql restart
-  when: mysql_in_container|d(False)|bool
-  tags: [ provision ]
+# Force restart after first-time installation
+- meta: flush_handlers
 
 - name: Set root user password
   # If /root/.my.cnf already exists, this will update the root password.
@@ -137,14 +136,8 @@
     mode: '0644'
   notify: [ 'Restart mysql' ]
 
-# Force restart after first-time installation (not running containerized)
+# Force restart after first-time installation
 - meta: flush_handlers
-  when: mysql_installed__|d(False)
-
-# Force restart after first-time installation (inside a container)
-- name: Restart mysql service 
-  shell: service mysql restart
-  when: not mysql_binary_installed_output.stat.exists
 
 # ---- Secure MySQL installation ----
 
