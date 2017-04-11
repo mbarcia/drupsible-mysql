@@ -1,6 +1,16 @@
 ---
 - name: Restart mysql
   service: name=mysql state=restarted
+  when: not mysql_in_container|d(False)|bool
 
 - name: Reload mysql
   service: name=mysql state=reloaded
+  when: not mysql_in_container|d(False)|bool
+
+- name: Restart mysql docker
+  command: service mysql restart
+  when: mysql_in_container|d(False)|bool
+
+- name: Reload mysql docker
+  command: service mysql reload
+  when: mysql_in_container|d(False)|bool

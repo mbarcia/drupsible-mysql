@@ -67,11 +67,10 @@
   with_items: [ 'python-mysqldb', 'mysql-server', 'automysqlbackup', 'ssl-cert' ]
   tags: [ provision ]
 
-# Make sure mysql is started (inside a container) if installed
 - name: Run mysql_install_db if no ibdata1 exists
   command: mysql_install_db
   when: not mysql_ibdata1_output.stat.exists
-  notify: [ 'Restart mysql' ]
+  notify: [ 'Restart mysql', 'Restart mysql docker' ]
 
 # Force restart after first-time installation
 - meta: flush_handlers
@@ -115,7 +114,7 @@
     append: True
     createhome: False
   when: mysql_pki is defined and mysql_pki|bool
-  notify: [ 'Restart mysql' ]
+  notify: [ 'Restart mysql', 'Restart mysql docker' ]
   tags: [ provision ]
 
 - name: Apply /etc/mysql/conf.d/mysqld.cnf configuration
@@ -125,7 +124,7 @@
     owner: 'root'
     group: 'root'
     mode: '0644'
-  notify: [ 'Restart mysql' ]
+  notify: [ 'Restart mysql', 'Restart mysql docker' ]
 
 - name: Apply /etc/mysql/conf.d/client.cnf configuration
   template:
@@ -134,7 +133,7 @@
     owner: 'root'
     group: 'root'
     mode: '0644'
-  notify: [ 'Restart mysql' ]
+  notify: [ 'Restart mysql', 'Restart mysql docker' ]
 
 # Force restart after first-time installation
 - meta: flush_handlers
@@ -175,7 +174,7 @@
     owner: 'root'
     group: 'root'
     mode: '0644'
-  notify: [ 'Reload mysql' ]
+  notify: [ 'Reload mysql', 'Reload mysql docker' ]
 
 - name: Create mysqldump section in /etc/mysql/debian.cnf
   lineinfile:
@@ -183,7 +182,7 @@
     dest:   '/etc/mysql/debian.cnf'
     line:   '[mysqldump]'
     state:  'present'
-  notify: [ 'Reload mysql' ]
+  notify: [ 'Reload mysql', 'Reload mysql docker' ]
 
 - name: Enable events table backup in mysqldump
   lineinfile:
@@ -192,7 +191,7 @@
     dest:   '/etc/mysql/debian.cnf'
     line:   'events = true'
     state:  'present'
-  notify: [ 'Reload mysql' ]
+  notify: [ 'Reload mysql', 'Reload mysql docker' ]
 
 # ---- Manage MySQL databases and users ----
 
@@ -219,7 +218,6 @@
   no_log: True
 
 - meta: flush_handlers
-  when: not mysql_in_container|d(False)|bool
 
 - name: Test if using a phusion image
   stat:
