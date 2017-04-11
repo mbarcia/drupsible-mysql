@@ -8,9 +8,9 @@
   when: not mysql_in_container|d(False)|bool
 
 - name: Restart mysql docker
-  command: service mysql restart
+  shell: service mysql restart
   when: mysql_in_container|d(False)|bool
 
 - name: Reload mysql docker
-  command: service mysql reload
+  shell: service mysql reload
   when: mysql_in_container|d(False)|bool
