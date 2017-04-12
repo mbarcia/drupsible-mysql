@@ -12,4 +12,4 @@ echo
 echo '* Starting MySQL'
 chown -R mysql:root /var/run/mysqld/
 
-exec /sbin/setuser mysql /usr/bin/mysqld_safe
+/usr/bin/mysqld_safe

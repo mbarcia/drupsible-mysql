@@ -74,9 +74,32 @@
 
 # Force restart after first-time installation
 - meta: flush_handlers
-- name: Start mysql in docker
-  shell: /usr/bin/mysqld_safe
+
+- name: Test if using a docker phusion image
+  stat:
+    path: "/sbin/my_init"
+  register: mysql_my_init_output
   when: mysql_in_container|d(False)|bool
+  tags: [ provision ]
+
+- name: Make sure /etc/service/mysql exists
+  file:
+    path: /etc/service/mysql
+    state: directory
+  when: mysql_in_container|d(False)|bool and mysql_my_init_output.stat.exists
+  tags: [ provision ]
+
+- name: Install mysql at boot
+  copy:
+    src: mysql-init.sh
+    dest: /etc/service/mysql/run
+    mode: "a+x"
+  when: mysql_in_container|d(False)|bool and mysql_my_init_output.stat.exists
+  tags: [ provision ]
+
+- name: Start mysql in docker
+  command: /sbin/my_init
+  when: mysql_in_container|d(False)|bool and mysql_my_init_output.stat.exists
 
 - name: Set root user password
   # If /root/.my.cnf already exists, this will update the root password.
@@ -221,25 +244,3 @@
   no_log: True
 
 - meta: flush_handlers
-
-- name: Test if using a phusion image
-  stat:
-    path: "/sbin/my_init"
-  register: mysql_my_init_output
-  when: mysql_in_container|d(False)|bool
-  tags: [ provision ]
-
-- name: Make sure /etc/service/mysql exists
-  file:
-    path: /etc/service/mysql
-    state: directory
-  when: mysql_in_container|d(False)|bool and mysql_my_init_output.stat.exists
-  tags: [ provision ]
-
-- name: Install mysql at boot
-  copy:
-    src: mysql-init.sh
-    dest: /etc/service/mysql/run
-    mode: "a+x"
-  when: mysql_in_container|d(False)|bool and mysql_my_init_output.stat.exists
-  tags: [ provision ]
