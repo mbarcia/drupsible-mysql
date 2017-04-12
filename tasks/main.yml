@@ -98,8 +98,17 @@
   tags: [ provision ]
 
 - name: Start mysql in docker
-  command: /sbin/my_init
+  shell: "/sbin/my_init &"
   when: mysql_in_container|d(False)|bool and mysql_my_init_output.stat.exists
+  
+- name: Wait until mysql is running
+  stat:
+    path: /var/run/mysqld/mysqld.pid
+  when: mysql_in_container|d(False)|bool and mysql_my_init_output.stat.exists
+  register: mysql_server_is_running_output
+  until: mysql_server_is_running_output.stat.exists
+  wait: 5
+  retries: 12
 
 - name: Set root user password
   # If /root/.my.cnf already exists, this will update the root password.
