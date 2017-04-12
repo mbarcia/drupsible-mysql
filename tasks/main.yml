@@ -99,14 +99,14 @@
 
 - name: Start mysql in docker
   shell: "/sbin/my_init &"
-  when: mysql_in_container|d(False)|bool and mysql_my_init_output.stat.exists
+  when: mysql_in_container|d(False)|bool and mysql_my_init_output.stat.exists and not mysql_binary_installed_output.stat.exists
   
 - name: Wait until mysql is running
   wait_for:
     path: /var/run/mysqld/mysqld.pid
     timeout: 60
     delay: 5
-  when: mysql_in_container|d(False)|bool and mysql_my_init_output.stat.exists
+  when: mysql_in_container|d(False)|bool and mysql_my_init_output.stat.exists and not mysql_binary_installed_output.stat.exists
 
 - name: Set root user password
   # If /root/.my.cnf already exists, this will update the root password.
@@ -147,7 +147,7 @@
     append: True
     createhome: False
   when: mysql_pki is defined and mysql_pki|bool
-  notify: [ 'Restart mysql', 'Restart mysql docker' ]
+  notify: [ 'Restart mysql' ]
   tags: [ provision ]
 
 - name: Apply /etc/mysql/conf.d/mysqld.cnf configuration
@@ -157,7 +157,7 @@
     owner: 'root'
     group: 'root'
     mode: '0644'
-  notify: [ 'Restart mysql', 'Restart mysql docker' ]
+  notify: [ 'Restart mysql' ]
 
 - name: Apply /etc/mysql/conf.d/client.cnf configuration
   template:
@@ -166,7 +166,7 @@
     owner: 'root'
     group: 'root'
     mode: '0644'
-  notify: [ 'Restart mysql', 'Restart mysql docker' ]
+  notify: [ 'Restart mysql' ]
 
 # Force restart after first-time installation
 - meta: flush_handlers
