@@ -109,7 +109,7 @@
   
 - name: Wait until mysql server is running
   wait_for:
-    path: /var/run/mysqld/mysqld.pid
+    path: /var/run/mysqld/mysqld.sock
     timeout: 60
     delay: 5
   when: mysql_in_container|d(False)|bool and mysql_my_init_output.stat.exists and not mysql_server_is_running_output.stat.exists
