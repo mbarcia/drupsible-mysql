@@ -102,13 +102,11 @@
   when: mysql_in_container|d(False)|bool and mysql_my_init_output.stat.exists
   
 - name: Wait until mysql is running
-  stat:
+  wait_for:
     path: /var/run/mysqld/mysqld.pid
   when: mysql_in_container|d(False)|bool and mysql_my_init_output.stat.exists
-  register: mysql_server_is_running_output
-  until: mysql_server_is_running_output.stat.exists
-  wait: 5
-  retries: 12
+  timeout: 60
+  delay: 5
 
 - name: Set root user password
   # If /root/.my.cnf already exists, this will update the root password.
