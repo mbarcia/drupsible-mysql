@@ -104,9 +104,9 @@
 - name: Wait until mysql is running
   wait_for:
     path: /var/run/mysqld/mysqld.pid
+    timeout: 60
+    delay: 5
   when: mysql_in_container|d(False)|bool and mysql_my_init_output.stat.exists
-  timeout: 60
-  delay: 5
 
 - name: Set root user password
   # If /root/.my.cnf already exists, this will update the root password.
