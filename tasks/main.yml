@@ -174,7 +174,7 @@
     owner: 'root'
     group: 'root'
     mode: '0644'
-  notify: [ 'Reload mysql', 'Reload mysql docker' ]
+  notify: [ 'Reload mysql' ]
 
 - name: Create mysqldump section in /etc/mysql/debian.cnf
   lineinfile:
@@ -182,7 +182,7 @@
     dest:   '/etc/mysql/debian.cnf'
     line:   '[mysqldump]'
     state:  'present'
-  notify: [ 'Reload mysql', 'Reload mysql docker' ]
+  notify: [ 'Reload mysql' ]
 
 - name: Enable events table backup in mysqldump
   lineinfile:
@@ -191,7 +191,7 @@
     dest:   '/etc/mysql/debian.cnf'
     line:   'events = true'
     state:  'present'
-  notify: [ 'Reload mysql', 'Reload mysql docker' ]
+  notify: [ 'Reload mysql' ]
 
 # ---- Manage MySQL databases and users ----
 
