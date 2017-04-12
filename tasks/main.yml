@@ -156,6 +156,13 @@
   notify: [ 'Restart mysql' ]
   tags: [ provision ]
 
+- name: Remove my.cnf on Trusty (docker phusion image)
+  file:
+    path: '/etc/mysql/my.cnf'
+    state: 'absent'
+  when: mysql_in_container|d(False)|bool and ansible_distribution_release == "trusty"
+  tags: [ provision ]
+
 - name: Apply /etc/mysql/conf.d/mysqld.cnf configuration
   template:
     src: 'etc/mysql/conf.d/mysqld.cnf.j2'
