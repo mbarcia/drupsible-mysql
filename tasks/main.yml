@@ -69,11 +69,14 @@
 
 - name: Run mysql_install_db if no ibdata1 exists
   command: mysql_install_db
-  when: not mysql_ibdata1_output.stat.exists
-  notify: [ 'Restart mysql', 'Restart mysql docker' ]
+  when: not mysql_ibdata1_output.stat.exists and mysql_in_container|d(False)|bool
+  notify: [ 'Restart mysql' ]
 
 # Force restart after first-time installation
 - meta: flush_handlers
+- name: Start mysql in docker
+  shell: /usr/bin/mysqld_safe
+  when: mysql_in_container|d(False)|bool
 
 - name: Set root user password
   # If /root/.my.cnf already exists, this will update the root password.
