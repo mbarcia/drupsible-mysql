@@ -94,6 +94,13 @@
   when: mysql_in_container|d(False)|bool and mysql_my_init_output.stat.exists
   tags: [ provision ]
 
+- name: Make sure /var/run/mysqld exists
+  file:
+    path: /var/run/mysqld
+    state: directory
+  when: mysql_in_container|d(False)|bool and mysql_my_init_output.stat.exists
+  tags: [ provision ]
+
 - name: Install mysql at boot
   copy:
     src: mysql-init.sh
@@ -108,14 +115,14 @@
   register: mysql_server_is_running_output
   when: mysql_in_container|d(False)|bool and mysql_my_init_output.stat.exists
 
-- name: Start mysql server if not
+- name: Start mysql server if not running
   shell: "/sbin/my_init &"
   when: mysql_in_container|d(False)|bool and mysql_my_init_output.stat.exists and not mysql_server_is_running_output.stat.exists
   
 - name: Wait until mysql server is running
   wait_for:
     path: /var/run/mysqld/mysqld.sock
-    timeout: 60
+    timeout: 120
     delay: 5
   when: mysql_in_container|d(False)|bool and mysql_my_init_output.stat.exists and not mysql_server_is_running_output.stat.exists
 
