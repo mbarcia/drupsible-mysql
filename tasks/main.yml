@@ -68,7 +68,7 @@
   tags: [ provision ]
 
 - name: Run mysql_install_db if no ibdata1 exists
-  command: mysql_install_db
+  command: mysqld --initialize
   when: not mysql_ibdata1_output.stat.exists and mysql_in_container|d(False)|bool
   notify: [ 'Restart mysql' ]
 
