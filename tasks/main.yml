@@ -85,7 +85,7 @@
     path: "/sbin/my_init"
   register: mysql_my_init_output
   when: mysql_in_container|d(False)|bool
-  tags: [ provision ]
+  tags: [ always ]
 
 - name: Make sure /etc/service/mysql exists
   file:
