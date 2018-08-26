@@ -135,7 +135,7 @@
     config_file: /root/.my.cnf
   register: mysql_set_root_password_output
   ignore_errors: True
-  tags: [ provision ]
+  tags: [ always ]
 
 - name: Try to set root user password with drupsible secret
   # Trying with password in ansible/secret, if something got mixed up.
