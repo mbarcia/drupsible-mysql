@@ -67,8 +67,13 @@
   with_items: [ 'python-mysqldb', 'mysql-server', 'automysqlbackup', 'ssl-cert' ]
   tags: [ provision ]
 
-- name: Run mysql_install_db if no ibdata1 exists
-  command: mysql_install_db
+- name: Again test whether ibdata1 is present
+  stat:
+    path: "/var/lib/mysql/ibdata1"
+  register: mysql_ibdata1_output
+
+- name: Initialise if no ibdata1 exists
+  command: mysqld --initialize
   when: not mysql_ibdata1_output.stat.exists and mysql_in_container|d(False)|bool
   notify: [ 'Restart mysql' ]
 
@@ -80,11 +85,18 @@
     path: "/sbin/my_init"
   register: mysql_my_init_output
   when: mysql_in_container|d(False)|bool
-  tags: [ provision ]
+  tags: [ always ]
 
 - name: Make sure /etc/service/mysql exists
   file:
     path: /etc/service/mysql
+    state: directory
+  when: mysql_in_container|d(False)|bool and mysql_my_init_output.stat.exists
+  tags: [ provision ]
+
+- name: Make sure /var/run/mysqld exists
+  file:
+    path: /var/run/mysqld
     state: directory
   when: mysql_in_container|d(False)|bool and mysql_my_init_output.stat.exists
   tags: [ provision ]
@@ -103,14 +115,14 @@
   register: mysql_server_is_running_output
   when: mysql_in_container|d(False)|bool and mysql_my_init_output.stat.exists
 
-- name: Start mysql server if not
+- name: Start mysql server if not running
   shell: "/sbin/my_init &"
   when: mysql_in_container|d(False)|bool and mysql_my_init_output.stat.exists and not mysql_server_is_running_output.stat.exists
   
 - name: Wait until mysql server is running
   wait_for:
     path: /var/run/mysqld/mysqld.sock
-    timeout: 60
+    timeout: 120
     delay: 5
   when: mysql_in_container|d(False)|bool and mysql_my_init_output.stat.exists and not mysql_server_is_running_output.stat.exists
 
@@ -123,7 +135,7 @@
     config_file: /root/.my.cnf
   register: mysql_set_root_password_output
   ignore_errors: True
-  tags: [ provision ]
+  tags: [ always ]
 
 - name: Try to set root user password with drupsible secret
   # Trying with password in ansible/secret, if something got mixed up.
